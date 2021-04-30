@@ -1,9 +1,9 @@
-import { createStackNavigator } from '@react-navigation/stack';
-import React, { useState, useEffect } from 'react';
-import WellcomeView from '../views/WellcomeView';
-import HomeView from '../views/HomeView';
-import ConfigUserView from '../views/ConfigUserView';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack';
+import React, { useEffect, useState } from 'react';
+import ConfigUserView from '../views/ConfigUserView';
+import HomeView from '../views/HomeView';
+import WellcomeView from '../views/WellcomeView';
 
 const stackRoutes = createStackNavigator();
 
@@ -20,12 +20,17 @@ export default function AppRoutes() {
                 console.log(e)
             }
         }
-        getUser(); 
+        getUser();
     }, [])
     return (
         <stackRoutes.Navigator
-            headerMode="none"
+            mode='modal'
+            headerMode="float"
+            headerBackground='white'
             screenOptions={{
+                headerShown: false,
+                cardStyleInterpolator: CardStyleInterpolators.forScaleFromCenterAndroid,
+                headerBackground: 'transparent',
                 cardStyle: {
                     backgroundColor: '#fff'
                 },

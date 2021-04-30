@@ -1,21 +1,25 @@
+import { useNavigation } from '@react-navigation/core';
 import React from 'react';
-import { SafeAreaView, Text, Image, StyleSheet } from 'react-native';
+import { Image, SafeAreaView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import ButtonRadius from '../components/ButtonRadius';
 import colors from '../styles/colors';
-import { useNavigation} from '@react-navigation/core';
 export default function WelcomeView() {
-    const navigation= useNavigation();
+    const navigation = useNavigation();
 
-    function handleMoveView(){
+    function handleMoveView() {
         navigation.navigate('ConfigUserView')
     }
-    
+
     return (
-        <SafeAreaView style={style.container}>
+        <SafeAreaView
+            style={style.container}>
             <Text style={style.title}> Reminder </Text>
             <Image source={require('../assets/img/ilustration.png')} style={style.img} />
             <Text style={style.subTitle}>Eu te ajudo a lembrar e você aprende, fácil assim.</Text>
-            <ButtonRadius text='Ok' onPress={handleMoveView} />
+            <View style={style.areaButton}>
+                <ButtonRadius text='Ok' onPress={handleMoveView} />
+            </View>
+            <StatusBar />
         </SafeAreaView>
 
     )
@@ -33,16 +37,25 @@ const style = StyleSheet.create({
         fontFamily: 'serif',
         fontWeight: 'bold',
         color: colors.primaryColor,
+        marginTop: '3%'
     },
     subTitle: {
-        fontSize: 20,
+        fontSize: 18,
         fontFamily: 'monospace',
         fontWeight: 'bold',
         color: colors.subTitleColor,
+        marginBottom: '15%'
     },
     img: {
         resizeMode: 'contain',
         width: '100%',
     },
+    areaButton: {
+        height: '10%',
+        width: '100%',
+        marginBottom: '5%',
+        alignItems: 'center',
+        justifyContent: 'center'
+    }
 
 })
