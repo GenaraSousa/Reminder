@@ -1,8 +1,8 @@
+import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { CardStyleInterpolators, createStackNavigator } from '@react-navigation/stack';
 import { Jost_600SemiBold, Jost_400Regular, Jost_500Medium } from '@expo-google-fonts/jost';
 import { useFonts } from 'expo-font';
-import React from 'react';
 import { Home } from './src/screens/Home'
 import AppLoading from 'expo-app-loading';
 import { NewReminder } from './src/screens/NewReminder';
