@@ -1,47 +1,107 @@
 import React, { useState } from 'react';
-import { SafeAreaView, Keyboard, ScrollView, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View, Button } from 'react-native';
+import {
+    SafeAreaView,
+    ScrollView,
+    StatusBar,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
+    Alert,
+    Dimensions,
+    Platform,
+    Keyboard
+} from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Picker } from '@react-native-picker/picker';
-
+import InputSpinner from "react-native-input-spinner";
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { format } from 'date-fns';
+import { format, isBefore } from 'date-fns';
 import colors from '../styles/colors';
 import fonts from '../styles/fonts'
+import { setReminderStore } from '../services/storage';
 
+const margin = Dimensions.get('window').width * 0.80;
 export function NewReminder() {
-    const [time, setTime] = useState(new Date(1598051730000));
-    const [show, setShow] = useState(false);
+    const [showDatePicker, setShowDatePicker] = useState(Platform.OS == 'ios');
 
+    const [selectedDateTime, setSelectedDateTime] = useState(new Date());
     const [contentTitle, setContentTitle] = useState("");
     const [content, setContent] = useState("");
     const [contentTitleFocus, setContentTitleFocus] = useState(false);
+    const [multiplicadorBreak, setMultiplicadorBreak] = useState(1);
+    const [incrimentBreak, setIncrimentBreak] = useState(0);
+    const [initialBreak, setInitialBreak] = useState(1);
+    const [repititionsBreak, setRepititionsBreak] = useState(1);
+    const [maximumBreak, setMaximumBreak] = useState(initialBreak + incrimentBreak);
 
-    const [selectedLanguage, setSelectedLanguage] = useState();
 
+    function onChange (event, dateTime) {
+        if (Platform.OS == 'android') {
+            setShowDatePicker(oldState => !oldState);
+        }
+        if (dateTime && isBefore(dateTime, new Date())) {
+            setSelectedDateTime(new Date())
+            return Alert.alert('Escolha uma hora válida! ⏰ ');
+        }
+        if (dateTime)
+            setSelectedDateTime(dateTime);
+    }
 
-    const onChange = (event, selectedDate) => {
-        const currentDate = selectedDate;
-        setShow(Platform.OS === 'ios');
-        setTime(currentDate);
-    };
+    function handleOpenDareTimePickerForAndroid() {
+        setShowDatePicker(oldState => !oldState);
+    }
 
-    const showMode = (currentMode) => {
-        setShow(true);
-    };
+    async function handleSave() {
+        Keyboard.dismiss();
 
-    const showTimepicker = () => {
-        showMode('time');
-    };
+        if(!contentTitle || !content){
+            return Alert.alert('Opa..', 'Preencha todos os campos.. 🙃');
+        }
+
+        try {
+            await setReminderStore({
+                contentTitle,
+                content,
+                selectedDateTime,
+                initialBreak,
+                incrimentBreak,
+                multiplicadorBreak,
+                repititionsBreak,
+                maximumBreak,
+            })
+
+            setContent("");
+            setContentTitle("");
+            setIncrimentBreak(1);
+            setMultiplicadorBreak(1);
+            setRepititionsBreak(1);
+            setMaximumBreak(50);
+            setInitialBreak(1);
+            Alert.alert("Sucesso!", "Lembrete armazenado.. 🥰")
+
+        } catch (error) {
+            console.log(error)
+            Alert.alert('Desculpe','Não foi possível salvar. 😥 ');
+        }
+    }
 
 
     return (
-        <TouchableWithoutFeedback style={style.container} onPress={() => { Keyboard.dismiss(), setContentTitleFocus(false) }} >
-            <SafeAreaView style={style.container}>
-                <StatusBar barStyle="dark-content" backgroundColor="white" />
-                <View style={style.header}>
-                    <Text style={style.title} >Novo lembrete</Text>
-                </View>
-                <ScrollView style={style.containerForm}>
+
+        <SafeAreaView style={style.container}>
+            <StatusBar barStyle="dark-content" backgroundColor="white" />
+            <View style={style.header}>
+                <Text style={style.title} >Novo lembrete</Text>
+            </View>
+
+            <ScrollView
+                style={style.containerForm}
+
+                showsVerticalScrollIndicator={false}
+            >
+                <View style={{width: margin, marginBottom: 50}}>
+                    {/* TITULO */}
                     <View style={style.containerInputSimple}>
                         <TextInput
                             value={contentTitle}
@@ -52,6 +112,7 @@ export function NewReminder() {
                             style={style.input}
                             onFocus={() => { setContentTitleFocus(true) }}
                         />
+
                         {contentTitleFocus ?
                             <Text style={style.latterCont}>
                                 {contentTitle.length}/30
@@ -59,9 +120,13 @@ export function NewReminder() {
                             null
                         }
                     </View>
+
+                    {/* CONTEÚDO */}
+
                     <TextInput
                         value={content}
                         multiline={true}
+                        textBreakStrategy='highQuality'
                         onChangeText={(value) => { setContent(value) }}
                         placeholder="Conteúdo"
                         placeholderTextColor={colors.gray20}
@@ -69,56 +134,147 @@ export function NewReminder() {
                         onFocus={() => { setContentTitleFocus(false) }}
                     />
 
-                    <View style={{marginBottom: 15,}}>
+                    {/* HORÁRIO DO PRIMEIRO LEMBRETE */}
+
+                    { Platform.OS == 'android' && (<View style={{ marginBottom: 15, }}>
                         <Text style={style.label}>
                             Primeiro lembrete
                         </Text>
                         <TouchableOpacity
                             style={style.inputWithIcon}
-                            onPress={showTimepicker}
+                            onPress={handleOpenDareTimePickerForAndroid}
                             title="Show time picker!">
                             <Text style={style.hours}>
-                                {`${format(time, 'HH:mm')}`}
+                                {`${format(selectedDateTime, 'HH:mm')}`}
                             </Text>
-                            <MaterialCommunityIcons style={{ alignSelf: 'center' }} name="clock-time-three" size={24} color={colors.gray20} />
+                            <MaterialCommunityIcons style={{ alignSelf: 'center' }} name="clock-time-three" size={30} color={colors.gray20} />
                         </TouchableOpacity>
-                    </View>
+                    </View>)}
 
-                    {show && (
+                    {showDatePicker && (
                         <DateTimePicker
                             testID="dateTimePicker"
-                            value={time}
+                            value={selectedDateTime}
                             mode='time'
-                            is24Hour={true}
+                            
                             display="spinner"
-                            onChange={onChange}
+                            onChange={ onChange}
                         />
                     )}
 
-                    <Picker
-                        selectedValue={selectedLanguage}
-                        style={style.input}
-                        dropdownIconColor={colors.gray20}
-                        inputWithIcon={true}
-                        onValueChange={(itemValue, itemIndex) =>
-                            setSelectedLanguage(itemValue)
-                        }>
-                        <Picker.Item label="Java" value="java" />
-                        <Picker.Item label="JavaScript" value="js" />
-                    </Picker>
+                    {/* INTERVALO INICIAL */}
 
-                </ScrollView>
-                <View style={style.footer}>
-                    <TouchableOpacity
-                        activeOpacity={0.6}
-                        onPress={() => { }}
-                        style={style.buttonAdd}
-                    >
-                        <Text style={style.textButton}>Concluir</Text>
-                    </TouchableOpacity>
+
+                    <Text style={style.label}>
+                        Intervalo inicial (min)
+                    </Text>
+
+                    <InputSpinner
+                        style={style.inputSpinner}
+                        max={1000}
+                        min={1}
+                        step={1}
+                        buttonStyle={style.buttonSpinner}
+                        inputStyle={style.textSpinner}
+                        rounded={false}
+                        value={initialBreak}
+                        onChange={(num) => {
+                            setInitialBreak(num);
+                        }}
+                    />
+                    {/* Multiplicador de intervalo (min)*/}
+
+
+                    <Text style={style.label}>
+                        Invremento ao intervalo (min)
+                    </Text>
+                    <InputSpinner
+                        style={style.inputSpinner}
+                        max={1000}
+                        min={0}
+                        step={1}
+                        buttonStyle={style.buttonSpinner}
+                        inputStyle={style.textSpinner}
+                        rounded={false}
+                        value={incrimentBreak}
+                        onChange={(num) => {
+                            setIncrimentBreak(num);
+                        }}
+                    />
+
+                    {/* Multiplicador de intervalo (min)*/}
+
+
+                    <Text style={style.label}>
+                        Multiplicador de intervalo (min)
+                    </Text>
+
+
+                    <InputSpinner
+                        style={style.inputSpinner}
+                        max={1000}
+                        min={1}
+                        step={1}
+                        buttonStyle={style.buttonSpinner}
+                        inputStyle={style.textSpinner}
+                        rounded={false}
+                        value={multiplicadorBreak}
+                        onChange={(num) => {
+                            setMultiplicadorBreak(num);
+                        }}
+                    />
+
+                    {/* QUANTIDADE DE REPETÇÕES*/}
+
+                    <Text style={style.label}>
+                        Quantidade de repetições
+                    </Text>
+
+                    <InputSpinner
+                        style={style.inputSpinner}
+                        max={1000}
+                        min={1}
+                        step={1}
+                        buttonStyle={style.buttonSpinner}
+                        inputStyle={style.textSpinner}
+                        rounded={false}
+                        value={repititionsBreak}
+                        onChange={(num) => {
+                            setRepititionsBreak(num);
+                        }}
+                    />
+
+
+                    <Text style={style.label}>
+                        Intervalo máximo (min)
+                    </Text>
+
+                    <InputSpinner
+                        style={style.inputSpinner}
+                        max={1000}
+                        min={1}
+                        step={1}
+                        buttonStyle={style.buttonSpinner}
+                        inputStyle={style.textSpinner}
+                        rounded={false}
+                        value={maximumBreak}
+                        onChange={(num) => {
+                            setMaximumBreak(num);
+                        }}
+                    />
+
                 </View>
-            </SafeAreaView>
-        </TouchableWithoutFeedback>
+            </ScrollView>
+            <View style={style.footer}>
+                <TouchableOpacity
+                    activeOpacity={0.6}
+                    onPress={handleSave}
+                    style={style.buttonAdd}
+                >
+                    <Text style={style.textButton}>Concluir</Text>
+                </TouchableOpacity>
+            </View>
+        </SafeAreaView>
     )
 }
 
@@ -126,6 +282,7 @@ const style = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: 'white',
+        width: '100%',
         alignItems: 'center',
         justifyContent: 'space-between'
     },
@@ -143,9 +300,7 @@ const style = StyleSheet.create({
     },
 
     containerForm: {
-        width: '80%',
-        marginBottom: 10,
-        marginTop: 15,
+        paddingHorizontal: '10%',
     },
     containerInputSimple: {
         alignItems: 'flex-end',
@@ -158,7 +313,7 @@ const style = StyleSheet.create({
         color: colors.gray20,
     },
     input: {
-        height: 40,
+        height: 50,
         width: '100%',
         backgroundColor: colors.gray10,
         color: colors.black,
@@ -185,13 +340,13 @@ const style = StyleSheet.create({
     },
     inputWithIcon: {
         flexDirection: 'row',
-        height: 40,
+        height: 50,
         width: '100%',
         justifyContent: 'flex-end',
         backgroundColor: colors.gray10,
         color: colors.black,
         borderRadius: 5,
-        paddingHorizontal: 15,
+        paddingHorizontal: 5,
         fontFamily: fonts.regular,
         fontSize: 18,
     },
@@ -203,14 +358,48 @@ const style = StyleSheet.create({
         marginBottom: 3,
 
     },
-
     hours: {
         fontFamily: fonts.medium,
-        width: '80%',
+        width: '78%',
         color: colors.black,
         alignSelf: 'center',
         textAlign: 'center',
         fontSize: 18,
+    },
+    picker: {
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: colors.gray10,
+        borderRadius: 5,
+        fontFamily: fonts.regular,
+        fontSize: 18,
+    },
+    inputSpinner: {
+        height: 40,
+        backgroundColor: colors.gray10,
+        color: colors.black,
+        borderRadius: 5,
+        paddingHorizontal: 5,
+        fontFamily: fonts.regular,
+        fontSize: 18,
+        justifyContent: 'center',
+        marginBottom: 10,
+    },
+
+    buttonSpinner: {
+        width: 30,
+        height: 30,
+        backgroundColor: colors.gray20,
+        borderRadius: 5,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    textSpinner: {
+        fontFamily: fonts.medium,
+        height: 40,
+
+        fontSize: 18,
+        color: colors.black,
     },
 
     footer: {
@@ -222,6 +411,7 @@ const style = StyleSheet.create({
     buttonAdd: {
         width: '100%',
         height: 50,
+        marginTop: 5,
         borderRadius: 5,
         backgroundColor: colors.green,
         justifyContent: 'center',

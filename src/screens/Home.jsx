@@ -1,8 +1,11 @@
 import React from 'react'
 import { StyleSheet, Text, View, StatusBar, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { Feather } from '@expo/vector-icons';
+import Animated from 'react-native-reanimated';
 import colors from '../styles/colors'
-import fonts from '../styles/fonts'
+import fonts from '../styles/fonts';
+
 import { useNavigation } from '@react-navigation/native';
 
 const reminders = [
@@ -23,6 +26,8 @@ const reminders = [
 export function Home() {
 
 
+
+
     const navigation = useNavigation();
     return (
         <SafeAreaView style={style.container}>
@@ -33,21 +38,37 @@ export function Home() {
 
             <ScrollView style={{ width: '80%', marginTop: '5%' }}>
                 {reminders.map((item, index) => (
-                    <TouchableOpacity style={style.cardReminder} key={index}>
-                        <Text style={style.titleReminder}>
-                            {item.title}
-                        </Text>
-                        <Text numberOfLines={3} ellipsizeMode='tail' style={style.textReminder}>
-                            {item.content}
-                        </Text>
-                    </TouchableOpacity>
+                    <Swipeable
+                        key={index}
+                        overshootRight={false}
+                        renderRightActions={() =>
+                            <Animated.View>
+                                <View>
+                                    <TouchableOpacity
+                                        style={style.buttonRemove}
+                                        onPress={()=>{}}>
+                                        <Feather name="trash-2" size={24} color={colors.orange} />
+                                    </TouchableOpacity>
+                                </View>
+                            </Animated.View>}
+                        
+                    >
+                        <TouchableOpacity style={style.cardReminder} key={index}>
+                            <Text style={style.titleReminder}>
+                                {item.title}
+                            </Text>
+                            <Text numberOfLines={3} ellipsizeMode='tail' style={style.textReminder}>
+                                {item.content}
+                            </Text>
+                        </TouchableOpacity>
+                    </Swipeable>
                 ))}
             </ScrollView>
 
             <View style={style.footer}>
                 <TouchableOpacity
                     activeOpacity={0.6}
-                    onPress={() =>  navigation.navigate('NewReminder')}
+                    onPress={() => navigation.navigate('NewReminder')}
                     style={style.buttonAdd}
                 >
                     <Feather name="plus" size={24} color="white" />
@@ -93,6 +114,7 @@ const style = StyleSheet.create({
     },
     cardReminder: {
         width: '100%',
+        backgroundColor: 'white',
         paddingHorizontal: '8%',
         paddingVertical: '5%',
         borderRadius: 5,
@@ -110,5 +132,15 @@ const style = StyleSheet.create({
         color: colors.black,
         fontSize: 18,
         lineHeight: 22,
+    },
+    buttonRemove: {
+        width: 100,
+        height: '100%',
+        backgroundColor: colors.red,
+        borderRadius: 20,
+        justifyContent: 'center',
+        alignSelf: 'center',
+        alignItems: 'center',
+        paddingLeft: 15
     }
 })
