@@ -1,69 +1,99 @@
-import React from 'react'
-import { StyleSheet, Text, View, StatusBar, SafeAreaView, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect } from 'react'
+import {
+    StyleSheet,
+    Text,
+    View,
+    StatusBar,
+    SafeAreaView,
+    TouchableOpacity,
+    ScrollView,
+    Alert,
+    FlatList
+} from 'react-native';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { Feather } from '@expo/vector-icons';
 import Animated from 'react-native-reanimated';
 import colors from '../styles/colors'
 import fonts from '../styles/fonts';
-
-import { useNavigation } from '@react-navigation/native';
-
-const reminders = [
-    {
-        title: 'Math',
-        content: '1 mais 1 é ingual a 3'
-    },
-    {
-        title: "coiso",
-        content: '1 mais 1 é ingual a 4 texto muiuto fgatyd ajksdksj  kasidfhk aklshdakj akjdhskja kajhdska kajhsdk kajhsdk'
-    },
-    {
-        title: 'Filo',
-        content: 'Rosquinha com leite'
-    }
-]
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { loadRemindersStorage, removeReminderStorage, setReminderStore } from '../services/storage';
+import { useState } from 'react/cjs/react.development';
 
 export function Home() {
-
-
-
-
+    const [load, setLoad] = useState(true)
     const navigation = useNavigation();
+    const [reminders, setReminders] = useState([])
+
+    async function handleRemove(reminder) {
+
+        Alert.alert('Remover', `Deseja remover a ${reminder.contentTitle}?`, [
+            {
+                text: 'Não 🤷‍♀️',
+                style: 'cancel'
+            },
+            {
+                text: 'Sim ✌',
+                onPress: async () => {
+                    try {
+                        await removeReminderStorage(reminder.id)
+                        setLoad(!load);
+                    } catch (error) {
+                        Alert.alert('Não foi possivel remover! 👀')
+                    }
+                }
+            }
+        ])
+    }
+
+    useEffect(() => {
+        async function loadStorageData() {
+            const remindersStoraged = await loadRemindersStorage();
+            setReminders(remindersStoraged);
+        }
+        navigation.addListener('focus', () => setLoad(!load))
+        loadStorageData();
+    }, [load, navigation])
+
+
     return (
         <SafeAreaView style={style.container}>
             <StatusBar barStyle="dark-content" backgroundColor="white" />
             <View style={style.header}>
                 <Text style={style.title} >Seus lembretes</Text>
             </View>
-
-            <ScrollView style={{ width: '80%', marginTop: '5%' }}>
-                {reminders.map((item, index) => (
+            <FlatList
+                style={{ width: '80%' }}
+                data={reminders}
+                keyExtractor={(item) => item.id}
+                renderItem={({ item }) => (
                     <Swipeable
-                        key={index}
                         overshootRight={false}
                         renderRightActions={() =>
                             <Animated.View>
                                 <View>
                                     <TouchableOpacity
                                         style={style.buttonRemove}
-                                        onPress={()=>{}}>
+                                        onPress={() => { handleRemove(item) }}>
                                         <Feather name="trash-2" size={24} color={colors.orange} />
                                     </TouchableOpacity>
                                 </View>
+
                             </Animated.View>}
-                        
                     >
-                        <TouchableOpacity style={style.cardReminder} key={index}>
+                        <TouchableOpacity style={style.cardReminder} >
                             <Text style={style.titleReminder}>
-                                {item.title}
+                                {item.contentTitle}
                             </Text>
                             <Text numberOfLines={3} ellipsizeMode='tail' style={style.textReminder}>
                                 {item.content}
                             </Text>
                         </TouchableOpacity>
                     </Swipeable>
-                ))}
-            </ScrollView>
+
+                )}
+            />
+
+
 
             <View style={style.footer}>
                 <TouchableOpacity
@@ -135,7 +165,7 @@ const style = StyleSheet.create({
     },
     buttonRemove: {
         width: 100,
-        height: '100%',
+        height: '90%',
         backgroundColor: colors.red,
         borderRadius: 20,
         justifyContent: 'center',

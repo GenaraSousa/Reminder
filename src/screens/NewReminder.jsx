@@ -58,6 +58,9 @@ export function NewReminder() {
         if(!contentTitle || !content){
             return Alert.alert('Opa..', 'Preencha todos os campos.. 🙃');
         }
+        if(selectedDateTime && isBefore(selectedDateTime, new Date())){
+            return Alert.alert('Opa..', 'Escolha uma hora no futuro.. 🙃');
+        }
 
         try {
             await setReminderStore({
@@ -77,6 +80,7 @@ export function NewReminder() {
             setMultiplicadorBreak(1);
             setRepititionsBreak(1);
             setMaximumBreak(50);
+            setSelectedDateTime(new Date());
             setInitialBreak(1);
             Alert.alert("Sucesso!", "Lembrete armazenado.. 🥰")
 
