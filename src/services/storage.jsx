@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Notifications from 'expo-notifications';
 import { format } from 'date-fns/esm';
 import 'react-native-get-random-values';
 import { v4 as uuidv4 } from 'uuid';
@@ -10,17 +11,33 @@ import { v4 as uuidv4 } from 'uuid';
  */
 export async function setReminderStore(stickyNote) {
   try {
+
     //Buscar lembretes do async storage
-
     const nextTime = new Date(stickyNote.selectedDateTime);
-    console.log(nextTime);
-
-    //Verificar a frequencia que a notificação vai aparecer 
     const now = new Date();
 
-   // const {  }
+    const seconds = Math.abs(
+      Math.ceil((now.getTime() - nextTime.getTime()) / 1000 )
+    )
 
-   /*  const data = await AsyncStorage.getItem('@SmartReminder:StickyNotes');
+    const notifificationId = await Notifications.scheduleNotificationAsync({
+      content: {
+        title: stickyNote.contentTitle,
+        body: stickyNote.content,
+        sound: true,
+        priority: Notifications.AndroidNotificationPriority.MAX,
+        data: {
+          stickyNote
+        },
+      }, 
+      trigger: {
+        seconds: seconds < 60 ? 60: seconds,
+        repeats: true,
+      }
+    });
+
+
+    const data = await AsyncStorage.getItem('@SmartReminder:StickyNotes');
     const oldStickNotes = data ? (JSON.parse(data)) : {};
     const id = uuidv4();
     const newStickyNote = {
@@ -28,6 +45,7 @@ export async function setReminderStore(stickyNote) {
         data:{ ...stickyNote, id},
         hour: stickyNote.selectedDateTime,
         id,
+        notifificationId
       }
     }
     await AsyncStorage.setItem('@SmartReminder:StickyNotes',
@@ -35,7 +53,7 @@ export async function setReminderStore(stickyNote) {
         ...newStickyNote,
         ...oldStickNotes
       })
-    ) */
+    ) 
   } catch (e) {
     throw new Error(e);
   }
@@ -67,6 +85,7 @@ export async function removeReminderStorage(id) {
     const stickeNotes = data ? (JSON.parse(data)) : {};
 
     //Cancelar a notificação
+    await Notifications.cancelScheduledNotificationAsync(stickeNotes[id].notifificationId);
 
     //Deletar do armazenamento local
     delete stickeNotes[id];
