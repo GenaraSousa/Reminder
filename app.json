@@ -1,10 +1,12 @@
 {
     "expo": {
-        "name": "Reminder",
+        "name": "Smart Reminder",
         "slug": "Reminder",
         "version": "1.0.0",
+        "description": "Aplicativo mobile para auxilio de aprendizado de conteúdos através de repetição e memorização.",
         "orientation": "portrait",
         "icon": "./assets/icon.png",
+        "platforms": ["ios", "android"],
         "splash": {
             "image": "./assets/splash.png",
             "resizeMode": "contain",
@@ -23,20 +25,12 @@
             "adaptiveIcon": {
                 "foregroundImage": "./assets/adaptive-icon.png",
                 "backgroundColor": "#FFFFFF"
-            }
-        },
-        "web": {
-            "favicon": "./assets/favicon.png"
-        },
-        "plugins": [
-            [
-                "expo-notifications",
-                {
-                    "icon": "./assets/iconNotification.png",
-                    "color": "#ffffff",
-                    "mode": "production"
-                }
+            },
+            "package": "com.Reminder.Reminder",
+            "permissions": [
+                "WRITE_EXTERNAL_STORAGE",
+                "READ_EXTERNAL_STORAGE"
             ]
-        ]
+        }
     }
 }

@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState } from 'react'
+import { useNavigation } from '@react-navigation/native';
 import {
     StyleSheet,
     Text,
@@ -6,18 +7,15 @@ import {
     StatusBar,
     SafeAreaView,
     TouchableOpacity,
-    ScrollView,
     Alert,
     FlatList
 } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
-import { Feather } from '@expo/vector-icons';
+import { loadRemindersStorage, removeReminderStorage } from '../services/storage';
 import Animated from 'react-native-reanimated';
-import colors from '../styles/colors'
+import { Feather } from '@expo/vector-icons';
 import fonts from '../styles/fonts';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { loadRemindersStorage, removeReminderStorage, setReminderStore } from '../services/storage';
-import { useState } from 'react/cjs/react.development';
+import colors from '../styles/colors'
 
 export function Home() {
     const [load, setLoad] = useState(true)
@@ -25,7 +23,6 @@ export function Home() {
     const [reminders, setReminders] = useState([])
 
     async function handleRemove(reminder) {
-
         Alert.alert('Remover', `Deseja remover a ${reminder.contentTitle}?`, [
             {
                 text: 'Não 🤷‍♀️',
@@ -111,9 +108,9 @@ export function Home() {
 const style = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: 'white',
         alignItems: 'center',
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        backgroundColor: 'white',
     },
     header: {
         width: '100%',

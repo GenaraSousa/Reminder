@@ -23,12 +23,13 @@ import { setReminderStore } from '../services/storage';
 
 const margin = Dimensions.get('window').width * 0.80;
 export function NewReminder() {
+
     const [showDatePicker, setShowDatePicker] = useState(Platform.OS == 'ios');
+    const [contentTitleFocus, setContentTitleFocus] = useState(false);
 
     const [selectedDateTime, setSelectedDateTime] = useState(new Date());
     const [contentTitle, setContentTitle] = useState("");
     const [content, setContent] = useState("");
-    const [contentTitleFocus, setContentTitleFocus] = useState(false);
     const [multiplicadorBreak, setMultiplicadorBreak] = useState(1);
     const [incrimentBreak, setIncrimentBreak] = useState(0);
     const [initialBreak, setInitialBreak] = useState(1);

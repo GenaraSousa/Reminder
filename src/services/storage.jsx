@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+//import * as TaskManager from 'expo-task-manager';
 import * as Notifications from 'expo-notifications';
 import { format } from 'date-fns/esm';
 import 'react-native-get-random-values';
@@ -6,54 +7,70 @@ import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Returns void
- * @param { {} } stickyNote
+ * @param { {} } reminder
  * 
  */
-export async function setReminderStore(stickyNote) {
+export async function setReminderStore(reminder) {
   try {
 
     //Buscar lembretes do async storage
-    const nextTime = new Date(stickyNote.selectedDateTime);
+
+    //cocolar o intervalo para a próxima notificação
+    const nextTime = new Date(reminder.selectedDateTime);
+    console.log(nextTime.getHours())
+    console.log(nextTime.getMinutes())
     const now = new Date();
 
     const seconds = Math.abs(
-      Math.ceil((now.getTime() - nextTime.getTime()) / 1000 )
+      Math.ceil((now.getTime() - nextTime.getTime()) / 1000)
     )
 
+    //Criar a notificação
     const notifificationId = await Notifications.scheduleNotificationAsync({
       content: {
-        title: stickyNote.contentTitle,
-        body: stickyNote.content,
+        title: reminder.contentTitle,
+        body: reminder.content,
         sound: true,
         priority: Notifications.AndroidNotificationPriority.MAX,
         data: {
-          stickyNote
+          reminder
         },
-      }, 
+      },
       trigger: {
-        seconds: seconds < 60 ? 60: seconds,
-        repeats: true,
+        hour: Number(nextTime.getHours()),
+        minute: Number(nextTime.getMinutes()),
+        repeats: true
       }
     });
 
-
-    const data = await AsyncStorage.getItem('@SmartReminder:StickyNotes');
-    const oldStickNotes = data ? (JSON.parse(data)) : {};
+    //Colocar no Armazenamento
+    const data = await AsyncStorage.getItem('@SmartReminder:Reminders');
+    const oldReminders = data ? (JSON.parse(data)) : {};
     const id = uuidv4();
-    const newStickyNote = {
+    const newReminder = {
       [id]: {
-        data:{ ...stickyNote, id},
-        hour: stickyNote.selectedDateTime,
+        data: { ...reminder, id },
+        hour: reminder.selectedDateTime,
         id,
         notifificationId
       }
     }
-    await AsyncStorage.setItem('@SmartReminder:StickyNotes',
+    await AsyncStorage.setItem('@SmartReminder:Reminders',
       JSON.stringify({
-        ...newStickyNote,
-        ...oldStickNotes
+        ...newReminder,
+        ...oldReminders
       })
-    ) 
+    )
+
+    // const BACKGROUND_NOTIFICATION_TASK = 'BACKGROUND-NOTIFICATION-TASK';
+
+    // TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, ({ data, error, executionInfo }) => {
+    //   console.log('Received a notification in the background!');
+    //   // Do something with the notification data
+    // });
+
+    // Notifications.registerTaskAsync(BACKGROUND_NOTIFICATION_TASK);
+
   } catch (e) {
     throw new Error(e);
   }
@@ -62,16 +79,16 @@ export async function setReminderStore(stickyNote) {
 
 export async function loadRemindersStorage() {
   try {
-    const data = await AsyncStorage.getItem('@SmartReminder:StickyNotes');
+    const data = await AsyncStorage.getItem('@SmartReminder:Reminders');
     const stickeNotes = data ? (JSON.parse(data)) : {};
     const stickNotesShorted = Object
-    .keys(stickeNotes)
-    .map((stickeNote) => {
-      return {
-        ...stickeNotes[stickeNote].data,
-        hour: format(new Date(stickeNotes[stickeNote].data.selectedDateTime), 'HH:mm')
-      }
-    })
+      .keys(stickeNotes)
+      .map((stickeNote) => {
+        return {
+          ...stickeNotes[stickeNote].data,
+          hour: format(new Date(stickeNotes[stickeNote].data.selectedDateTime), 'HH:mm')
+        }
+      })
     return stickNotesShorted;
   } catch (error) {
     throw new Error(error);
@@ -81,7 +98,7 @@ export async function loadRemindersStorage() {
 export async function removeReminderStorage(id) {
 
   try {
-    const data = await AsyncStorage.getItem('@SmartReminder:StickyNotes');
+    const data = await AsyncStorage.getItem('@SmartReminder:Reminders');
     const stickeNotes = data ? (JSON.parse(data)) : {};
 
     //Cancelar a notificação
@@ -90,11 +107,12 @@ export async function removeReminderStorage(id) {
     //Deletar do armazenamento local
     delete stickeNotes[id];
     await AsyncStorage.setItem(
-      '@SmartReminder:StickyNotes',
+      '@SmartReminder:Reminders',
       JSON.stringify(stickeNotes)
     )
-    
+
   } catch (error) {
     throw new Error(error);
   }
+
 }
