@@ -45,23 +45,23 @@ export default function App() {
         //o intervalo é contínuo, apenas refazer a notificação contando a partir de agora
       }
 
-      const notifificationId = await Notifications.scheduleNotificationAsync({
-        content: {
-          title: reminder.contentTitle,
-          body: reminder.content,
-          sound: true,
-          vibrate: [0, 250, 250, 250],
-          priority: Notifications.AndroidNotificationPriority.MAX,
-          data: {
-            reminder
-          },
-        },
-        trigger: {
-          hour: Number(nextTime.getHours()),
-          minute: Number(nextTime.getMinutes()),
-          repeats: true
-        }
-      });
+      // const notifificationId = await Notifications.scheduleNotificationAsync({
+      //   content: {
+      //     title: reminder.contentTitle,
+      //     body: reminder.content,
+      //     sound: true,
+      //     vibrate: [0, 250, 250, 250],
+      //     priority: Notifications.AndroidNotificationPriority.MAX,
+      //     data: {
+      //       reminder
+      //     },
+      //   },
+      //   trigger: {
+      //     hour: Number(nextTime.getHours()),
+      //     minute: Number(nextTime.getMinutes()),
+      //     repeats: true
+      //   }
+      // });
 
 
       let newHours = new Date();
