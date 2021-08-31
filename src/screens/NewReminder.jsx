@@ -64,6 +64,7 @@ export function NewReminder() {
         }
 
         try {
+            
             await setReminderStore({
                 contentTitle,
                 content,
@@ -73,6 +74,7 @@ export function NewReminder() {
                 multiplicadorBreak,
                 repititionsBreak,
                 maximumBreak,
+                currentRepetition: 0,
             })
 
             setContent("");

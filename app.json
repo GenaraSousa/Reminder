@@ -6,7 +6,13 @@
         "description": "Aplicativo mobile para auxilio de aprendizado de conteúdos através de repetição e memorização.",
         "orientation": "portrait",
         "icon": "./assets/icon.png",
-        "platforms": ["ios", "android"],
+        "notification": {
+            "icon": "./assets/iconNotification.png"
+        },
+        "platforms": [
+            "ios",
+            "android"
+        ],
         "splash": {
             "image": "./assets/splash.png",
             "resizeMode": "contain",

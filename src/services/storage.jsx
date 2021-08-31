@@ -12,18 +12,7 @@ import { v4 as uuidv4 } from 'uuid';
  */
 export async function setReminderStore(reminder) {
   try {
-
-    //Buscar lembretes do async storage
-
-    //cocolar o intervalo para a próxima notificação
     const nextTime = new Date(reminder.selectedDateTime);
-    console.log(nextTime.getHours())
-    console.log(nextTime.getMinutes())
-    const now = new Date();
-
-    const seconds = Math.abs(
-      Math.ceil((now.getTime() - nextTime.getTime()) / 1000)
-    )
 
     //Criar a notificação
     const notifificationId = await Notifications.scheduleNotificationAsync({
@@ -31,6 +20,7 @@ export async function setReminderStore(reminder) {
         title: reminder.contentTitle,
         body: reminder.content,
         sound: true,
+        vibrate: [0, 250, 250, 250],
         priority: Notifications.AndroidNotificationPriority.MAX,
         data: {
           reminder
@@ -61,15 +51,6 @@ export async function setReminderStore(reminder) {
         ...oldReminders
       })
     )
-
-    // const BACKGROUND_NOTIFICATION_TASK = 'BACKGROUND-NOTIFICATION-TASK';
-
-    // TaskManager.defineTask(BACKGROUND_NOTIFICATION_TASK, ({ data, error, executionInfo }) => {
-    //   console.log('Received a notification in the background!');
-    //   // Do something with the notification data
-    // });
-
-    // Notifications.registerTaskAsync(BACKGROUND_NOTIFICATION_TASK);
 
   } catch (e) {
     throw new Error(e);

@@ -10,65 +10,83 @@ import { useFonts } from 'expo-font';
 import { Home } from './src/screens/Home'
 import AppLoading from 'expo-app-loading';
 import { NewReminder } from './src/screens/NewReminder';
+import { removeReminderStorage } from './src/services/storage';
 
 export default function App() {
   const Stack = createStackNavigator();
   const [isPermissionRead, setIsPermissionRead] = useState(false)
   const [isPermissionWrite, setIsPermissionWrite] = useState(false)
-  const [isPermissionNotification, setIsPermissionNotification] = useState(false)
 
   useEffect(() => {
-    const subscription = Notifications.addNotificationResponseReceivedListener( response => {
-      console.log('Retorno do bagulho: ', response)
+    requestPermissionsStorage();
+    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+      removeReminderStorage(response.notification.request.identifier);
+
+      if (response.notification.request.content.data.reminder.multiplicadorBreak > 1) {
+        //verificar se já foi repetido alguma vez
+        if (response.notification.request.content.data.reminder?.currentBreak > 0) {
+          //recalcular o novo intervalo em segundos a partir de agora multiplicando pelo intervalo atual
+          //Se a quantidade de repetições for maior que 1 então verificar se existe um ocorrencia e incrementar
+          //Se não houver, criar um campo nos dados e incrementar
+        }else{
+          //primiera vez do notificação após o horário inicial
+        }
+      } else if (response.notification.request.content.data.reminder.incrimentBreak > 0) {
+        //recalcular noso intervalo incrementando o atual (intervalo inicial)
+        if (response.notification.request.content.data.reminder?.currentBreak > 0) {
+          //recalcular o novo intervalo em segundos a partir de agora somando pelo intervalo atual
+          //Se a quantidade de repetições for maior que 1 então verificar se existe uma ocorrencia e incrementar
+          //Se não houver, criar um campo nos dados e incrementar
+        }else{
+          //primiera vez do notificação após o horário inicial
+          //criar o campo de currentBreak
+        }
+      } else {
+        //o intervalo é contínuo, apenas refazer a notificação contando a partir de agora
+      }
+
+      const notifificationId = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: reminder.contentTitle,
+          body: reminder.content,
+          sound: true,
+          vibrate: [0, 250, 250, 250],
+          priority: Notifications.AndroidNotificationPriority.MAX,
+          data: {
+            reminder
+          },
+        },
+        trigger: {
+          hour: Number(nextTime.getHours()),
+          minute: Number(nextTime.getMinutes()),
+          repeats: true
+        }
+      });
+
+
+      let newHours = new Date();
+      console.log('Existe: ', response.notification.request.content.data.reminder.incrimentBreak);
+      newHours.setMinutes(newHours.getMinutes() + response.notification.request.content.data.reminder.incrimentBreak);
+      response.notification.request.trigger.minute = response.notification.request.trigger.minute + 4;
     })
     return () => subscription.remove();
-    /*   const subscripition = Notifications.addNotificationReceivedListener(
-        async notification => {
-          const data = notification.request.content.data.stickyNote;
-          //notification.request.trigger.
-          console.log(data);
-        }
-      );
-      return subscripition.remove(); */
-    /* async function notifications(){
-      const data = await Notifications.getAllScheduledNotificationsAsync();
-      console.log(data);
-    }
-    notifications(); */
     // updateApp();
-    // requestPermissionsStorage();
   }, [])
 
-  /*   async function registerForPushNotificationsAsync() {
-      let token;
-      if (Constants.isDevice) {
-        const { status: existingStatus } = await Notifications.getPermissionsAsync();
-        let finalStatus = existingStatus;
-        if (existingStatus !== 'granted') {
-          const { status } = await Notifications.requestPermissionsAsync();
-          finalStatus = status;
-        }
-        if (finalStatus !== 'granted') {
-          alert('Failed to get push token for push notification!');
-          return;
-        }
-        token = (await Notifications.getExpoPushTokenAsync()).data;
-        console.log(token);
-      } else {
-        alert('Must use physical device for Push Notifications');
-      }
-    
-      if (Platform.OS === 'android') {
-        Notifications.setNotificationChannelAsync('default', {
-          name: 'default',
-          importance: Notifications.AndroidImportance.MAX,
-          vibrationPattern: [0, 250, 250, 250],
-          lightColor: '#FF231F7C',
-        });
-      }
-      return token;
-    } */
-/* 
+  //Permissão de amaznamento e leitura
+  const requestPermissionsStorage = async () => {
+    const granted = await PermissionsAndroid.requestMultiple([
+      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE]
+    );
+    if (granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED && granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED) {
+      setIsPermissionWrite(true);
+      setIsPermissionRead(true);
+    } else {
+      Alert.alert("Ops...", 'O Reminder não funcionará corretamente sem a permissão.. 😐');
+    }
+  };
+
   async function updateApp() {
     const { isAvailable } = await Updates.checkForUpdateAsync();
     if (isAvailable) {
@@ -77,43 +95,15 @@ export default function App() {
     }
   }
 
-  const requestPermissionsStorage = async () => {
-    const granted = await PermissionsAndroid.requestMultiple([
-      PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
-      PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE]
-    );
-    console.log(granted);
-    if (granted['android.permission.WRITE_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED && granted['android.permission.READ_EXTERNAL_STORAGE'] === PermissionsAndroid.RESULTS.GRANTED ) {
-      setIsPermissionWrite(true);
-      setIsPermissionRead(true);
-      alertIfRemoteNotificationsDisabledAsync()
-    } else {
-      Alert.alert("Ops...", 'O Reminder não funcionará corretamente sem a permissão.. 😐');
-    }
-  };
 
-  async function alertIfRemoteNotificationsDisabledAsync() {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
 
-    let finalStatus = existingStatus;
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-    if (finalStatus !== 'granted') {
-      Alert.alert('Desculpe', "Você precisa autorizar as noficações.. 😶");
-      return;
-    }
-    setIsPermissionNotification(true);
-  }
- */
   let [fontsLoaded] = useFonts({
     Jost_600SemiBold,
     Jost_400Regular,
     Jost_500Medium
   });
 
-  if (!fontsLoaded ) {
+  if (!fontsLoaded || !isPermissionRead || !isPermissionWrite) {
     return <AppLoading />;
   } else {
     return (

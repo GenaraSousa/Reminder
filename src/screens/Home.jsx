@@ -12,12 +12,24 @@ import {
 } from 'react-native';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 import { loadRemindersStorage, removeReminderStorage } from '../services/storage';
+import * as Notifications from 'expo-notifications';
 import Animated from 'react-native-reanimated';
 import { Feather } from '@expo/vector-icons';
 import fonts from '../styles/fonts';
-import colors from '../styles/colors'
+import colors from '../styles/colors';
+
+Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: true,
+    }),
+});
+
 
 export function Home() {
+
+    const [isPermissionNotification, setIsPermissionNotification] = useState(false)
     const [load, setLoad] = useState(true)
     const navigation = useNavigation();
     const [reminders, setReminders] = useState([])
@@ -42,7 +54,24 @@ export function Home() {
         ])
     }
 
+    //Verificar se tem permissão para notificação
+    async function alertIfRemoteNotificationsDisabledAsync() {
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+
+        let finalStatus = existingStatus;
+        if (existingStatus !== 'granted') {
+            const { status } = await Notifications.requestPermissionsAsync();
+            finalStatus = status;
+        }
+        if (finalStatus !== 'granted') {
+            Alert.alert('Desculpe', "Você precisa autorizar as noficações.. 😶");
+            return;
+        }
+        setIsPermissionNotification(true);
+    }
+
     useEffect(() => {
+        alertIfRemoteNotificationsDisabledAsync();
         async function loadStorageData() {
             const remindersStoraged = await loadRemindersStorage();
             setReminders(remindersStoraged);
